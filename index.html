@@ -235,8 +235,7 @@
                      <div>
                         <label for="program-select" class="block mb-2 text-sm font-medium text-gray-900">Select B.Des Program:</label>
                         <select id="program-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                            <!-- Options will be dynamically loaded based on campus -->
-                            <option value="All Programs">All Programs</option>
+                            <!-- Options will be dynamically loaded here -->
                         </select>
                     </div>
                      <div>
@@ -983,7 +982,7 @@
                 'Fashion Design': {'General': 3500, 'OBC': 4200, 'SC': 6900, 'ST': 8500, 'EWS': 3400, 'PwD': 10900},
                 'Fashion Comm.': {'General': 3800, 'OBC': 4500, 'SC': 7200, 'ST': 8700, 'EWS': 3700, 'PwD': 11400}
             },
-            ''2024': {
+            '2024': {
                 'Fashion Design': {'General': 3550, 'OBC': 4250, 'SC': 6950, 'ST': 8550, 'EWS': 3450, 'PwD': 10950},
                 'Fashion Comm.': {'General': 3850, 'OBC': 4550, 'SC': 7250, 'ST': 8750, 'EWS': 3750, 'PwD': 11450}
             },
@@ -1030,9 +1029,9 @@
     // HTML elements
     const campusSelect = document.getElementById('campus-select');
     const yearSelect = document.getElementById('year-select');
-    const programSelect = document.getElementById('program-select'); // New program select
+    const programSelect = document.getElementById('program-select'); // Main program select
     const categoryFilterSelect = document.getElementById('category-filter-select');
-    const applicantCategorySelect = document.getElementById('applicant-category-select'); // New dropdown
+    const applicantCategorySelect = document.getElementById('applicant-category-select'); // Your Actual Category dropdown
     const cmrInput = document.getElementById('cmr-input');
     const categoryRankInput = document.getElementById('category-rank-input');
     const updateRanksButton = document.getElementById('update-ranks-button');
@@ -1052,7 +1051,7 @@
 
     // Trend chart specific elements
     const trendCampusSelect = document.getElementById('trend-campus-select');
-    const trendProgramSelect = document.getElementById('trend-program-select');
+    const trendProgramSelect = document.getElementById('trend-program-select'); // Trend program select
     const trendCategorySelect = document.getElementById('trend-category-select');
     const updateTrendButton = document.getElementById('update-trend-button');
 
@@ -1063,20 +1062,24 @@
 
     // Data for B.Des Specializations details
     const bdesSpecializations = {
-        'Fashion Design': {
-            icon: '👗',
-            description: 'Focuses on creativity, garment construction, pattern making, and fashion illustration. Prepares students for roles as fashion designers, stylists, and merchandisers.'
+        'Accessory Design': {
+            icon: '👜',
+            description: 'Explores the design and production of accessories like footwear, bags, jewelry, and lifestyle products. Combines aesthetics with functionality and market trends.'
         },
         'Fashion Communication': {
             icon: '📣',
             description: 'Develops skills in fashion journalism, photography, styling, visual merchandising, and graphic design for the fashion industry. Perfect for storytellers and communicators.'
         },
-        'Accessory Design': {
-            icon: '👜',
-            description: 'Explores the design and production of accessories like footwear, bags, jewelry, and lifestyle products. Combines aesthetics with functionality and market trends.'
+        'Fashion Design': {
+            icon: '👗',
+            description: 'Focuses on creativity, garment construction, pattern making, and fashion illustration. Prepares students for roles as fashion designers, stylists, and merchandisers.'
+        },
+        'Fashion Interior': {
+            icon: '🏠',
+            description: 'Applies fashion principles to interior spaces, focusing on aesthetics, functionality, and trend analysis in residential and commercial design contexts.'
         },
         'Knitwear Design': {
-            icon: '🧶',
+            icon: '�',
             description: 'Specializes in the design, development, and production of knitted garments and products. Covers yarn technology, knitting techniques, and trend forecasting.'
         },
         'Leather Design': {
@@ -1086,10 +1089,6 @@
         'Textile Design': {
             icon: '🧵',
             description: 'Involves the creation of designs for woven, printed, and surface-patterned textiles for fashion, interiors, and other applications. Combines art with material science.'
-        },
-        'Fashion Interior': {
-            icon: '🏠',
-            description: 'Applies fashion principles to interior spaces, focusing on aesthetics, functionality, and trend analysis in residential and commercial design contexts.'
         }
     };
 
@@ -1115,7 +1114,7 @@
         displayCategoryRank.textContent = categoryRankInput.value;
 
         const selectedApplicantCategory = applicantCategorySelect.value;
-        // FIX: Dynamically choose which rank to use based on the "Your Actual Category" selection
+        // Dynamically choose which rank to use based on the "Your Actual Category" selection
         if (selectedApplicantCategory === 'General') {
             currentApplicantRank = parseInt(cmrInput.value, 10);
             // Update the span to clearly indicate which rank is being used for analysis
@@ -1139,9 +1138,13 @@
 
         let programsToAnalyze = [];
         if (selectedProgram === "All Programs") {
-            programsToAnalyze = Object.keys(campusYearData);
+            // Filter programs to analyze to only those present in the data for this campus/year
+            programsToAnalyze = Object.keys(campusYearData); 
         } else {
-            programsToAnalyze.push(selectedProgram);
+            // Only analyze the specific selected program
+            if (campusYearData[selectedProgram]) {
+                programsToAnalyze.push(selectedProgram);
+            }
         }
 
         let favorablePrograms = [];
@@ -1208,7 +1211,9 @@
         if (selectedProgram === "All Programs") {
             programsToConsider = Object.keys(campusYearData);
         } else {
-            programsToConsider.push(selectedProgram);
+            if (campusYearData[selectedProgram]) { // Check if the selected program exists for this campus/year
+                programsToConsider.push(selectedProgram);
+            }
         }
 
         for (const program of programsToConsider) {
@@ -1242,27 +1247,66 @@
         }
     }
 
-    // Populates the program select dropdown for the main chart based on campus
-    function populateProgramSelect(campus) {
-        const programs = Object.keys(cutoffData[campus]?.['2023'] || {}); // Use 2023 data to get all programs
-        programSelect.innerHTML = '<option value="All Programs">All Programs</option>'; // Always add "All Programs" option
-        if (programs.length === 0) {
-            return;
-        }
-        programs.forEach(program => {
+    // Populates the program select with ALL possible B.Des programs
+    // This function is now simplified to just populate from the bdesSpecializations list
+    function populateAllProgramsSelect(selectElement) {
+        selectElement.innerHTML = '<option value="All Programs">All Programs</option>'; 
+        const allPossiblePrograms = Object.keys(bdesSpecializations).sort(); 
+        allPossiblePrograms.forEach(program => {
             const option = document.createElement('option');
             option.value = program;
             option.textContent = program;
-            programSelect.appendChild(option);
+            selectElement.appendChild(option);
         });
-        programSelect.value = "All Programs"; // Select "All Programs" by default
     }
+
+    // Populates the trend program select with programs available for a given campus (or a fallback to all if needed)
+    function populateTrendProgramSelect(campus) {
+        const allProgramsForCampus = new Set();
+        const campusData = cutoffData[campus];
+
+        if (campusData) {
+            for (const year in campusData) {
+                if (campusData.hasOwnProperty(year)) {
+                    Object.keys(campusData[year]).forEach(program => allProgramsForCampus.add(program));
+                }
+            }
+        }
+
+        // Clear existing options for trendProgramSelect
+        trendProgramSelect.innerHTML = ''; 
+        
+        // Add programs specific to the campus, sorted
+        const sortedCampusPrograms = Array.from(allProgramsForCampus).sort();
+        sortedCampusPrograms.forEach(program => {
+            const option = document.createElement('option');
+            option.value = program;
+            option.textContent = program;
+            trendProgramSelect.appendChild(option);
+        });
+
+        // Fallback: If no specific programs found for campus in cutoffData, add all general B.Des specializations
+        // This ensures the dropdown is always populated with options.
+        if (sortedCampusPrograms.length === 0) {
+            populateAllProgramsSelect(trendProgramSelect); // Reuses the populateAllProgramsSelect logic
+        } else {
+             // Try to select "Fashion Design" by default, or the first available option if Fashion Design isn't there
+            if (sortedCampusPrograms.includes("Fashion Design")) {
+                trendProgramSelect.value = "Fashion Design";
+            } else {
+                trendProgramSelect.value = sortedCampusPrograms[0];
+            }
+        }
+    }
+
 
     // Creates/updates the main cutoff bar chart
     function createCutoffChart(campus, selectedYear, selectedProgram, selectedCategoryFilter) {
         const campusYearData = cutoffData[campus]?.[selectedYear];
         if (!campusYearData) {
             if (cutoffChart) cutoffChart.destroy();
+            updateSummaryStatistics(campus, selectedYear, selectedProgram);
+            updateChanceIndicator(campus, selectedYear, applicantCategorySelect.value, currentApplicantRank, selectedProgram);
             return;
         }
 
@@ -1272,16 +1316,17 @@
         
         let programsToDisplay = [];
         if (selectedProgram === "All Programs") {
+            // Display all programs available for this campus/year from the cutoffData
             programsToDisplay = Object.keys(campusYearData);
         } else {
-            if (campusYearData[selectedProgram]) { // Check if the selected program exists for this campus/year
+            // Only display the specific selected program if data exists for it
+            if (campusYearData[selectedProgram]) { 
                 programsToDisplay.push(selectedProgram);
-            } else {
-                // If selected program is not available for the chosen campus/year, fall back to "All Programs"
-                programSelect.value = "All Programs";
-                programsToDisplay = Object.keys(campusYearData);
             }
         }
+
+        // Sort programs alphabetically for consistent chart display
+        programsToDisplay.sort();
         
         programsToDisplay.forEach(program => {
             chartLabels.push(wrapLabels(program, 12));
@@ -1290,7 +1335,7 @@
         if (selectedCategoryFilter === 'All') {
             allCategories.forEach(category => {
                 const dataForCategory = programsToDisplay.map(program => campusYearData[program]?.[category] || null);
-                if (dataForCategory.some(d => d !== null)) {
+                if (dataForCategory.some(d => d !== null)) { // Only add dataset if it has any data points
                     datasets.push({
                         label: `${category} Closing Rank`,
                         data: dataForCategory,
@@ -1302,7 +1347,7 @@
             });
         } else {
             const dataForSelectedCategory = programsToDisplay.map(program => campusYearData[program]?.[selectedCategoryFilter] || null);
-            if (dataForSelectedCategory.some(d => d !== null)) {
+            if (dataForSelectedCategory.some(d => d !== null)) { // Only add dataset if it has any data points
                 datasets.push({
                     label: `${selectedCategoryFilter} Closing Rank`,
                     data: dataForSelectedCategory,
@@ -1356,7 +1401,7 @@
                         annotations: {
                             line1: {
                                 type: 'line',
-                                // FIX: Use the dynamically determined currentApplicantRank for the annotation line
+                                // Use the dynamically determined currentApplicantRank for the annotation line
                                 xMin: currentApplicantRank, 
                                 xMax: currentApplicantRank, 
                                 borderColor: 'rgb(255, 99, 132)',
@@ -1381,23 +1426,6 @@
         cutoffChart = new Chart(document.getElementById('cutoffChart'), chartConfig);
         updateSummaryStatistics(campus, selectedYear, selectedProgram); // Update summary whenever main chart is drawn
         updateChanceIndicator(campus, selectedYear, applicantCategorySelect.value, currentApplicantRank, selectedProgram); // Update chance indicator
-    }
-
-    // Populates the trend program select based on the chosen campus
-    function populateTrendProgramSelect(campus) {
-        const programs = Object.keys(cutoffData[campus]?.['2023'] || {}); // Use 2023 data to get all programs
-        trendProgramSelect.innerHTML = ''; // Clear existing options
-        if (programs.length === 0) {
-            trendProgramSelect.innerHTML = '<option value="">No Programs Available</option>';
-            return;
-        }
-        programs.forEach(program => {
-            const option = document.createElement('option');
-            option.value = program;
-            option.textContent = program;
-            trendProgramSelect.appendChild(option);
-        });
-        trendProgramSelect.value = programs[0] || ''; // Select the first program by default
     }
 
     // Creates/updates the multi-year trend line chart
@@ -1467,7 +1495,8 @@
                     annotation: {
                         annotations: {
                             line1: {
-                                // FIX: Use the dynamically determined currentApplicantRank for the annotation line
+                                type: 'line',
+                                // Use the dynamically determined currentApplicantRank for the annotation line
                                 yMin: currentApplicantRank, 
                                 yMax: currentApplicantRank, 
                                 borderColor: 'rgb(255, 99, 132)',
@@ -1523,7 +1552,7 @@
 
     // Main chart filters
     campusSelect.addEventListener('change', () => {
-        populateProgramSelect(campusSelect.value); // Repopulate programs when campus changes
+        // No need to populate programSelect again here, as it's static now (all programs)
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
     });
 
@@ -1531,7 +1560,7 @@
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
     });
 
-    programSelect.addEventListener('change', () => { // New event listener for program select
+    programSelect.addEventListener('change', () => { 
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
     });
 
@@ -1539,38 +1568,48 @@
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
     });
 
-    // FIX: Add event listener for applicantCategorySelect to trigger rank recalculation and chart updates
+    // Event listener for applicantCategorySelect to trigger rank recalculation and chart updates
     applicantCategorySelect.addEventListener('change', () => {
          updateDisplayedRanks(); // Recalculate which rank (CMR/Category) to use
          createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value); // Re-render chart with new effective rank
-         createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value); // Re-render trend chart with new effective rank
+         // Re-render trend chart only if a specific program is selected (not "All Programs")
+         if (trendProgramSelect.value && trendProgramSelect.value !== "All Programs") { 
+            createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value); 
+         }
          updateChanceIndicator(campusSelect.value, yearSelect.value, applicantCategorySelect.value, currentApplicantRank, programSelect.value);
     });
 
     updateRanksButton.addEventListener('click', () => {
         updateDisplayedRanks(); // Recalculate effective rank
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
-        createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
+        // Re-render trend chart only if a specific program is selected (not "All Programs")
+        if (trendProgramSelect.value && trendProgramSelect.value !== "All Programs") {
+            createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
+        }
     });
 
     // Trend chart filters
     trendCampusSelect.addEventListener('change', () => {
-        populateTrendProgramSelect(trendCampusSelect.value);
-        if (trendProgramSelect.value) { // Ensure a program is selected after population
+        populateTrendProgramSelect(trendCampusSelect.value); // Populate programs based on campus data (or all as fallback)
+        if (trendProgramSelect.value && trendProgramSelect.value !== "All Programs") { 
             createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
         }
     });
 
     trendProgramSelect.addEventListener('change', () => {
-        createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
+        if (trendProgramSelect.value && trendProgramSelect.value !== "All Programs") { // Ensure a specific program is selected
+            createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
+        }
     });
 
     trendCategorySelect.addEventListener('change', () => {
-        createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
+        if (trendProgramSelect.value && trendProgramSelect.value !== "All Programs") { // Ensure a specific program is selected
+            createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
+        }
     });
 
     updateTrendButton.addEventListener('click', () => {
-        if (trendProgramSelect.value) {
+        if (trendProgramSelect.value && trendProgramSelect.value !== "All Programs") { // Ensure a specific program is selected
             createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
         }
     });
@@ -1589,15 +1628,22 @@
     // Initial load
     window.onload = () => {
         updateDisplayedRanks(); // Set initial effective rank based on default selection
-        populateProgramSelect(campusSelect.value); // Populate programs for the main chart
+        populateAllProgramsSelect(programSelect); // Populate ALL programs for the main chart
+        populateTrendProgramSelect(trendCampusSelect.value); // Populate programs for trend chart based on initial campus
+        
+        // Ensure initial chart rendering based on dynamically populated values
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
-        populateTrendProgramSelect(trendCampusSelect.value); // Populate programs for trend chart
-        if (trendProgramSelect.value) {
+        
+        // Initial rendering for trend chart needs a valid program selected.
+        // If populateTrendProgramSelect sets a specific program, render it.
+        if (trendProgramSelect.value && trendProgramSelect.value !== "All Programs") { 
             createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
         }
+        
         populateDepartmentDropdown(); // Populate and display initial department details
     };
 
 </script>
 </body>
 </html>
+�

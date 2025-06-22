@@ -10,7 +10,6 @@
     <script>
         // Register the annotation plugin globally as soon as it's loaded.
         // This ensures the plugin is available before any charts are created.
-        // Moved here to ensure it runs immediately after the plugin script is parsed.
         Chart.register(ChartjsPluginAnnotation);
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -984,7 +983,7 @@
                 'Fashion Design': {'General': 3500, 'OBC': 4200, 'SC': 6900, 'ST': 8500, 'EWS': 3400, 'PwD': 10900},
                 'Fashion Comm.': {'General': 3800, 'OBC': 4500, 'SC': 7200, 'ST': 8700, 'EWS': 3700, 'PwD': 11400}
             },
-            '2024': {
+            ''2024': {
                 'Fashion Design': {'General': 3550, 'OBC': 4250, 'SC': 6950, 'ST': 8550, 'EWS': 3450, 'PwD': 10950},
                 'Fashion Comm.': {'General': 3850, 'OBC': 4550, 'SC': 7250, 'ST': 8750, 'EWS': 3750, 'PwD': 11450}
             },
@@ -1065,7 +1064,7 @@
     // Data for B.Des Specializations details
     const bdesSpecializations = {
         'Fashion Design': {
-            icon: '�',
+            icon: '👗',
             description: 'Focuses on creativity, garment construction, pattern making, and fashion illustration. Prepares students for roles as fashion designers, stylists, and merchandisers.'
         },
         'Fashion Communication': {
@@ -1116,13 +1115,14 @@
         displayCategoryRank.textContent = categoryRankInput.value;
 
         const selectedApplicantCategory = applicantCategorySelect.value;
+        // FIX: Dynamically choose which rank to use based on the "Your Actual Category" selection
         if (selectedApplicantCategory === 'General') {
             currentApplicantRank = parseInt(cmrInput.value, 10);
-            // Update the span to show which rank is being used for analysis
+            // Update the span to clearly indicate which rank is being used for analysis
             currentCategoryRankSpan.textContent = `${cmrInput.value} (CMR)`; 
         } else {
             currentApplicantRank = parseInt(categoryRankInput.value, 10);
-            // Update the span to show which rank is being used for analysis
+            // Update the span to clearly indicate which rank is being used for analysis
             currentCategoryRankSpan.textContent = `${categoryRankInput.value} (Category)`; 
         }
     }
@@ -1356,8 +1356,9 @@
                         annotations: {
                             line1: {
                                 type: 'line',
-                                xMin: currentApplicantRank, // Use the dynamically determined currentApplicantRank
-                                xMax: currentApplicantRank, // Use the dynamically determined currentApplicantRank
+                                // FIX: Use the dynamically determined currentApplicantRank for the annotation line
+                                xMin: currentApplicantRank, 
+                                xMax: currentApplicantRank, 
                                 borderColor: 'rgb(255, 99, 132)',
                                 borderWidth: 2,
                                 borderDash: [6, 6],
@@ -1466,9 +1467,9 @@
                     annotation: {
                         annotations: {
                             line1: {
-                                type: 'line',
-                                yMin: currentApplicantRank, // Use the dynamically determined currentApplicantRank
-                                yMax: currentApplicantRank, // Use the dynamically determined currentApplicantRank
+                                // FIX: Use the dynamically determined currentApplicantRank for the annotation line
+                                yMin: currentApplicantRank, 
+                                yMax: currentApplicantRank, 
                                 borderColor: 'rgb(255, 99, 132)',
                                 borderWidth: 2,
                                 borderDash: [6, 6],
@@ -1538,16 +1539,16 @@
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
     });
 
+    // FIX: Add event listener for applicantCategorySelect to trigger rank recalculation and chart updates
     applicantCategorySelect.addEventListener('change', () => {
-         // Update the effective rank before updating charts
-         updateDisplayedRanks(); 
+         updateDisplayedRanks(); // Recalculate which rank (CMR/Category) to use
+         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value); // Re-render chart with new effective rank
+         createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value); // Re-render trend chart with new effective rank
          updateChanceIndicator(campusSelect.value, yearSelect.value, applicantCategorySelect.value, currentApplicantRank, programSelect.value);
-         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value); // Re-render chart with new rank
-         createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value); // Re-render trend chart with new rank
     });
 
     updateRanksButton.addEventListener('click', () => {
-        updateDisplayedRanks();
+        updateDisplayedRanks(); // Recalculate effective rank
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
         createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
     });
@@ -1600,4 +1601,3 @@
 </script>
 </body>
 </html>
-�

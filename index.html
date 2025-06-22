@@ -197,7 +197,7 @@
                     </div>
                     <div>
                         <label for="category-rank-input" class="block mb-2 text-sm font-medium text-gray-900">Your Category Rank:</label>
-                        <input type="number" id="category-rank-input" value="791" min="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <input type="number" id="category-rank-input" value="791" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                     </div>
                     <div>
                         <label for="campus-select" class="block mb-2 text-sm font-medium text-gray-900">Select a Campus:</label>
@@ -252,11 +252,11 @@
                             <option value="PwD">PwD</option>
                         </select>
                     </div>
-                    <div>
+                     <div>
                         <label for="applicant-category-select" class="block mb-2 text-sm font-medium text-gray-900">Your Actual Category (for analysis):</label>
                         <select id="applicant-category-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                            <option value="General">General</option>
                             <option selected value="OBC">OBC</option>
+                            <option value="General">General</option>
                             <option value="SC">SC</option>
                             <option value="ST">ST</option>
                             <option value="EWS">EWS</option>
@@ -273,7 +273,7 @@
                 <div class="chart-container">
                     <canvas id="cutoffChart"></canvas>
                 </div>
-                <p id="chart-explanation" class="text-sm text-center text-gray-600 mt-4">The red dashed line shows your input Category Rank (<span id="current-category-rank">791</span>). If a bar representing a specific category and course extends past this line, it means the simulated closing rank for that category in the selected year was higher than your rank, indicating a strong chance of admission for that specific program and category. **Note: 2025 data is an expected/simulated projection.**</p>
+                <p id="chart-explanation" class="text-sm text-center text-gray-600 mt-4">The red dashed line shows your **effective rank for analysis** (<span id="current-category-rank">791</span>). This rank is determined by your "Actual Category" selection (e.g., Common Merit Rank for General, Category Rank for others). If a bar representing a specific category and course extends past this line, it means the simulated closing rank for that category in the selected year was higher than your effective rank, indicating a strong chance of admission for that specific program and category. **Note: 2025 data is an expected/simulated projection.**</p>
                 <div id="chance-indicator" class="mt-6 p-4 rounded-lg text-center text-lg font-semibold" style="background-color: #E0F7FA; color: #00796B;">
                     <p><span id="chance-message">Update the chart to see your admission prospects!</span></p>
                 </div>
@@ -1065,7 +1065,7 @@
     // Data for B.Des Specializations details
     const bdesSpecializations = {
         'Fashion Design': {
-            icon: '👗',
+            icon: '�',
             description: 'Focuses on creativity, garment construction, pattern making, and fashion illustration. Prepares students for roles as fashion designers, stylists, and merchandisers.'
         },
         'Fashion Communication': {
@@ -1105,14 +1105,26 @@
         'PwD': '#A020F0'
     };
 
+    let currentApplicantRank = 0; // Initialize global variable for the applicant's effective rank
+
+
     // --- Core Functions ---
 
     // Updates the displayed CMR and Category Ranks from input fields
     function updateDisplayedRanks() {
         displayCmr.textContent = cmrInput.value;
         displayCategoryRank.textContent = categoryRankInput.value;
-        currentCategoryRankSpan.textContent = categoryRankInput.value;
-        currentApplicantRank = parseInt(categoryRankInput.value, 10);
+
+        const selectedApplicantCategory = applicantCategorySelect.value;
+        if (selectedApplicantCategory === 'General') {
+            currentApplicantRank = parseInt(cmrInput.value, 10);
+            // Update the span to show which rank is being used for analysis
+            currentCategoryRankSpan.textContent = `${cmrInput.value} (CMR)`; 
+        } else {
+            currentApplicantRank = parseInt(categoryRankInput.value, 10);
+            // Update the span to show which rank is being used for analysis
+            currentCategoryRankSpan.textContent = `${categoryRankInput.value} (Category)`; 
+        }
     }
 
     // Calculates and displays admission chances
@@ -1137,6 +1149,7 @@
         let unfavorablePrograms = [];
 
         programsToAnalyze.forEach(program => {
+            // Use the applicantCategory to fetch the correct cutoff for the analysis
             if (campusYearData[program] && campusYearData[program][applicantCategory] !== undefined) {
                 const cutoff = campusYearData[program][applicantCategory];
                 if (applicantRank <= cutoff) { // Rank is better than or equal to cutoff
@@ -1158,15 +1171,15 @@
         let textColor = '';
 
         if (favorablePrograms.length > 0) {
-            message = `Based on your Category Rank of ${applicantRank} (${applicantCategory}) and simulated ${year} data for ${campus}, your chances are **High** for programs like: ${favorablePrograms.slice(0, 2).join(', ')}${favorablePrograms.length > 2 ? ' and more.' : '.'}`;
+            message = `Based on your effective rank of ${applicantRank} (${applicantCategory}) and simulated ${year} data for ${campus}, your chances are **High** for programs like: ${favorablePrograms.slice(0, 2).join(', ')}${favorablePrograms.length > 2 ? ' and more.' : '.'}`;
             bgColor = '#D4EDDA'; // Light Green
             textColor = '#155724'; // Dark Green
         } else if (borderlinePrograms.length > 0) {
-            message = `Based on your Category Rank of ${applicantRank} (${applicantCategory}) and simulated ${year} data for ${campus}, your chances are **Moderate/Borderline** for programs like: ${borderlinePrograms.slice(0, 2).join(', ')}${borderlinePrograms.length > 2 ? ' and more.' : '.'} Consider 'Floating' during counseling if allotted.`;
+            message = `Based on your effective rank of ${applicantRank} (${applicantCategory}) and simulated ${year} data for ${campus}, your chances are **Moderate/Borderline** for programs like: ${borderlinePrograms.slice(0, 2).join(', ')}${borderlinePrograms.length > 2 ? ' and more.' : '.'} Consider 'Floating' during counseling if allotted.`;
             bgColor = '#FFF3CD'; // Light Yellow
             textColor = '#856404'; // Dark Yellow
         } else {
-            message = `Based on your Category Rank of ${applicantRank} (${applicantCategory}) and simulated ${year} data for ${campus}, your chances are **Low/Unlikely** for any programs at this campus in this year. You might consider exploring other NIFT campuses or programs.`;
+            message = `Based on your effective rank of ${applicantRank} (${applicantCategory}) and simulated ${year} data for ${campus}, your chances are **Low/Unlikely** for any programs at this campus in this year. You might consider exploring other NIFT campuses or programs.`;
             bgColor = '#F8D7DA'; // Light Red
             textColor = '#721C24'; // Dark Red
         }
@@ -1343,8 +1356,8 @@
                         annotations: {
                             line1: {
                                 type: 'line',
-                                xMin: currentApplicantRank,
-                                xMax: currentApplicantRank,
+                                xMin: currentApplicantRank, // Use the dynamically determined currentApplicantRank
+                                xMax: currentApplicantRank, // Use the dynamically determined currentApplicantRank
                                 borderColor: 'rgb(255, 99, 132)',
                                 borderWidth: 2,
                                 borderDash: [6, 6],
@@ -1444,6 +1457,28 @@
                     },
                     legend: {
                         position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: tooltipTitleCallback
+                        }
+                    },
+                    annotation: {
+                        annotations: {
+                            line1: {
+                                type: 'line',
+                                yMin: currentApplicantRank, // Use the dynamically determined currentApplicantRank
+                                yMax: currentApplicantRank, // Use the dynamically determined currentApplicantRank
+                                borderColor: 'rgb(255, 99, 132)',
+                                borderWidth: 2,
+                                borderDash: [6, 6],
+                                label: {
+                                    enabled: true,
+                                    content: `Your Rank: ${currentApplicantRank}`,
+                                    position: 'start'
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1504,12 +1539,17 @@
     });
 
     applicantCategorySelect.addEventListener('change', () => {
+         // Update the effective rank before updating charts
+         updateDisplayedRanks(); 
          updateChanceIndicator(campusSelect.value, yearSelect.value, applicantCategorySelect.value, currentApplicantRank, programSelect.value);
+         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value); // Re-render chart with new rank
+         createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value); // Re-render trend chart with new rank
     });
 
     updateRanksButton.addEventListener('click', () => {
         updateDisplayedRanks();
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
+        createTrendChart(trendCampusSelect.value, trendProgramSelect.value, trendCategorySelect.value);
     });
 
     // Trend chart filters
@@ -1547,7 +1587,7 @@
 
     // Initial load
     window.onload = () => {
-        updateDisplayedRanks();
+        updateDisplayedRanks(); // Set initial effective rank based on default selection
         populateProgramSelect(campusSelect.value); // Populate programs for the main chart
         createCutoffChart(campusSelect.value, yearSelect.value, programSelect.value, categoryFilterSelect.value);
         populateTrendProgramSelect(trendCampusSelect.value); // Populate programs for trend chart
@@ -1560,3 +1600,4 @@
 </script>
 </body>
 </html>
+�
